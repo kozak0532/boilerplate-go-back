@@ -38,7 +38,7 @@ func main() {
 		cancel()
 		fmt.Printf("Sent cancel to all threads...")
 	}()
-
+	//змінна конфіг (набір)
 	var conf = config.GetConfiguration()
 
 	err := database.Migrate(conf)

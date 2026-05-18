@@ -20,8 +20,8 @@ type Configuration struct {
 
 func GetConfiguration() Configuration {
 	return Configuration{
-		DatabaseName:        getOrDefault("DB_NAME", "todo-db"),
-		DatabaseHost:        getOrDefault("DB_HOST", "127.0.0.1:5432"),
+		DatabaseName:        getOrDefault("DB_NAME", "todo-db-26"),
+		DatabaseHost:        getOrDefault("DB_HOST", "127.0.0.1:5432"), //лук бек як він себе бачить
 		DatabaseUser:        getOrDefault("DB_USER", "postgres"),
 		DatabasePassword:    getOrDefault("DB_PASSWORD", "postgres"),
 		MigrateToVersion:    getOrDefault("MIGRATE", "latest"),

@@ -3,17 +3,19 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/BohdanBoriak/boilerplate-go-back/config"
-	"github.com/BohdanBoriak/boilerplate-go-back/config/container"
-	"github.com/BohdanBoriak/boilerplate-go-back/internal/infra/http/controllers"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/cors"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/BohdanBoriak/boilerplate-go-back/config"
+	"github.com/BohdanBoriak/boilerplate-go-back/config/container"
+	"github.com/BohdanBoriak/boilerplate-go-back/internal/app"
+	"github.com/BohdanBoriak/boilerplate-go-back/internal/infra/http/controllers"
+	"github.com/BohdanBoriak/boilerplate-go-back/internal/infra/http/middlewares"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 )
 
 func Router(cont container.Container) http.Handler {
@@ -49,6 +51,7 @@ func Router(cont container.Container) http.Handler {
 				apiRouter.Use(cont.AuthMw)
 
 				UserRouter(apiRouter, cont.UserController)
+				TaskRouter(apiRouter, cont.TaskController, cont.TaskService)
 				apiRouter.Handle("/*", NotFoundJSON())
 			})
 		})
@@ -97,6 +100,15 @@ func UserRouter(r chi.Router, uc controllers.UserController) {
 			"/",
 			uc.Delete(),
 		)
+	})
+}
+func TaskRouter(r chi.Router, tc controllers.TaskController, ts app.TaskService) {
+	tpom := middlewares.PathObject("taskId", controllers.TaskKey, ts)
+	r.Route("/tasks", func(apiRouter chi.Router) {
+		apiRouter.Post("/", tc.Save())
+		apiRouter.With(tpom).Get("/{taskId}", tc.Find())
+		apiRouter.With(tpom).Put("/{taskId}", tc.Update())
+		apiRouter.With(tpom).Delete("/{taskId}", tc.Delete())
 	})
 }
 
