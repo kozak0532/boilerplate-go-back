@@ -54,8 +54,18 @@ func (c TaskController) FindList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 
-		//todo: add filters for FindList, and sorting cryteria
-		tasks, err := c.taskService.FindList(user.Id)
+		// Зчитуємо параметри фільтрації та сортування з URL (наприклад: ?status=NEW&sortBy=-created_date)
+		queryStatus := r.URL.Query().Get("status")
+		querySort := r.URL.Query().Get("sortBy")
+
+		// Наповнюємо фільтр живими даними
+		filter := domain.TaskFilter{
+			Status: domain.TaskStatus(queryStatus),
+			SortBy: querySort,
+		}
+
+		// Передаємо заповнений фільтр у сервіс
+		tasks, err := c.taskService.FindList(user.Id, filter)
 		if err != nil {
 			log.Printf("TaskController.FindList(c.taskService.FindList): %s", err)
 			InternalServerError(w, err)
@@ -97,17 +107,21 @@ func (c TaskController) Update() http.HandlerFunc {
 			return
 		}
 
+		// Розпаковуємо JSON із Postman (завдяки попередньому кроку тут уже є статус)
 		updTask, err := requests.Bind(r, requests.TaskRequest{}, domain.Task{})
 		if err != nil {
-			log.Printf("TaskController.Save(requests.Bind): %s", err)
+			log.Printf("TaskController.Update(requests.Bind): %s", err)
 			BadRequest(w, errors.New("invalid request body"))
 			return
 		}
 
+		// Копіюємо оновлені поля
 		task.Title = updTask.Title
 		task.Description = updTask.Description
 		task.Deadline = updTask.Deadline
+		task.Status = updTask.Status // <-- ОСЬ ЦЕЙ РЯДОК ВСЕ ОЖИВЛЯЄ!
 
+		// Зберігаємо в базу даних
 		task, err = c.taskService.Update(task)
 		if err != nil {
 			log.Printf("TaskController.Update(c.taskService.Update): %s", err)
@@ -120,6 +134,7 @@ func (c TaskController) Update() http.HandlerFunc {
 
 		Success(w, taskDto)
 	}
+
 }
 
 func (c TaskController) Delete() http.HandlerFunc {

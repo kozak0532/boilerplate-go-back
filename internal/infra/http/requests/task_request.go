@@ -10,6 +10,7 @@ type TaskRequest struct {
 	Title       string `json:"title" validate:"required"`
 	Description string `json:"description"`
 	Deadline    *int64 `json:"deadline"`
+	Status      string `json:"status"` // <-- ДОДАНО: тепер статус приймається з Postman
 }
 
 func (r TaskRequest) ToDomainModel() (interface{}, error) {
@@ -22,9 +23,11 @@ func (r TaskRequest) ToDomainModel() (interface{}, error) {
 		d1 := time.Unix(timeUnix, 0)
 		deadline = &d1
 	}
+
 	return domain.Task{
 		Title:       r.Title,
 		Description: r.Description,
 		Deadline:    deadline,
+		Status:      domain.TaskStatus(r.Status), // <-- ДОДАНО: передаємо статус у доменну модель
 	}, nil
 }
